@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>圣诞快乐微信特效</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a2a3a 0%, #0d1b2a 100%);
+            overflow-x: hidden;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            height: 95vh;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            overflow: hidden;
+            background-color: #fff;
+        }
+        
+        /* 微信标题栏 */
+        .wechat-header {
+            background-color: #2e7d32;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            z-index: 100;
+        }
+        
+        .wechat-header h1 {
+            font-size: 20px;
+            font-weight: 500;
+        }
+        
+        .wechat-header i {
+            font-size: 20px;
+            margin-left: 15px;
+            cursor: pointer;
+        }
+        
+        /* 聊天区域 */
+        .chat-container {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #e5ddd5;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect fill="%23e5ddd5" width="100" height="100"/><path fill="%23d6cdc4" d="M0 0 L100 0 L100 100 Z"/></svg>');
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* 消息样式 */
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .message.received {
+            justify-content: flex-start;
+        }
+        
+        .message.sent {
+            justify-content: flex-end;
+        }
+        
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 5px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        
+        .message.sent .message-avatar {
+            order: 2;
+            margin-right: 0;
+            margin-left: 10px;
+        }
+        
+        .message-content {
+            max-width: 65%;
+            padding: 10px 15px;
+            border-radius: 18px;
+            position: relative;
+            word-break: break-word;
+            line-height: 1.5;
+        }
+        
+        .message.received .message-content {
+            background-color: white;
+            border-top-left-radius: 5px;
+        }
+        
+        .message.sent .message-content {
+            background-color: #a7ffa7;
+            border-top-right-radius: 5px;
+            color: #000;
+        }
+        
+        .message-time {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+            text-align: right;
+        }
+        
+        /* 输入区域 */
+        .input-container {
+            background-color: #f0f0f0;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            border-top: 1px solid #ddd;
+        }
+        
+        .input-box {
+            flex-grow: 1;
+            background-color: white;
+            border-radius: 20px;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .input-box input {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 16px;
+            padding: 5px;
+        }
+        
+        .input-box i {
+            color: #666;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        
+        .send-button {
+            background-color: #07c160;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            margin-left: 15px;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+        
+        .send-button:hover {
+            background-color: #06ad56;
+        }
+        
+        /* 圣诞树和雪花区域 */
+        #christmas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        /* 圣诞树样式 */
+        .christmas-tree {
+            position: absolute;
+            top: -150px;
+            z-index: 1001;
+            pointer-events: none;
+            animation: fall linear forwards;
+        }
+        
+        .tree-top {
+            width: 0;
+            height: 0;
+            border-left: 30px solid transparent;
+            border-right: 30px solid transparent;
+            border-bottom: 50px solid #2e7d32;
+            position: absolute;
+            top: 0;
+            left: -30px;
+        }
+        
+        .tree-middle {
+            width: 0;
+            height: 0;
+            border-left: 40px solid transparent;
+            border-right: 40px solid transparent;
+            border-bottom: 60px solid #2e7d32;
+            position: absolute;
+            top: 40px;
+            left: -40px;
+        }
+        
+        .tree-bottom {
+            width: 0;
+            height: 0;
+            border-left: 50px solid transparent;
+            border-right: 50px solid transparent;
+            border-bottom: 70px solid #2e7d32;
+            position: absolute;
+            top: 90px;
+            left: -50px;
+        }
+        
+        .tree-trunk {
+            width: 20px;
+            height: 30px;
+            background-color: #8B4513;
+            position: absolute;
+            top: 160px;
+            left: -10px;
+        }
+        
+        /* 雪花样式 */
+        .snowflake {
+            position: absolute;
+            top: -20px;
+            color: white;
+            font-size: 20px;
+            pointer-events: none;
+            z-index: 1000;
+            animation: snow-fall linear forwards, sway 3s ease-in-out infinite;
+            opacity: 0.8;
+        }
+        
+        /* 动画 */
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+            }
+        }
+        
+        @keyframes snow-fall {
+            to {
+                transform: translateY(100vh);
+            }
+        }
+        
+        @keyframes sway {
+            0%, 100% {
+                transform: translateX(0);
+            }
+            50% {
+                transform: translateX(30px);
+            }
+        }
+        
+        /* 提示信息 */
+        .hint {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 600px) {
+            .container {
+                height: 90vh;
+                border-radius: 10px;
+            }
+            
+            .message-content {
+                max-width: 75%;
+            }
+        }
+        
+        /* 特效激活时的提示 */
+        .effect-notice {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 24px;
+            z-index: 2000;
+            animation: fadeOut 3s forwards;
+            display: none;
+        }
+        
+        @keyframes fadeOut {
+            0% { opacity: 1; }
+            70% { opacity: 1; }
+            100% { opacity: 0; display: none; }
+        }
+        
+        /* 星星装饰 */
+        .star {
+            position: absolute;
+            color: gold;
+            font-size: 14px;
+            animation: twinkle 2s infinite alternate;
+        }
+        
+        @keyframes twinkle {
+            from { opacity: 0.3; }
+            to { opacity: 1; }
+        }
+        
+        /* 圣诞装饰球 */
+        .ornament {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #ff4444;
+            box-shadow: 0 0 5px rgba(255, 68, 68, 0.7);
+            z-index: 1002;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 微信标题栏 -->
+        <div class="wechat-header">
+            <div>
+                <i class="fas fa-chevron-left"></i>
+            </div>
+            <h1>圣诞快乐群 (8)</h1>
+            <div>
+                <i class="fas fa-search"></i>
+                <i class="fas fa-ellipsis-v"></i>
+            </div>
+        </div>
+        
+        <!-- 聊天区域 -->
+        <div class="chat-container" id="chatContainer">
+            <div class="hint">
+                在下方输入"圣诞快乐"并发送，触发圣诞树和雪花特效
+            </div>
+            
+            <!-- 预设消息 -->
+            <div class="message received">
+                <img src="https://randomuser.me/api/portraits/women/32.jpg" alt="Avatar" class="message-avatar">
+                <div>
+                    <div class="message-content">大家圣诞节有什么计划呀？</div>
+                    <div class="message-time">昨天 18:30</div>
+                </div>
+            </div>
+            
+            <div class="message sent">
+                <div>
+                    <div class="message-content">我准备在家开个圣诞派对！</div>
+                    <div class="message-time">昨天 18:32</div>
+                </div>
+                <img src="https://randomuser.me/api/portraits/men/44.jpg" alt="Avatar" class="message-avatar">
+            </div>
+            
+            <div class="message received">
+                <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="Avatar" class="message-avatar">
+                <div>
+                    <div class="message-content">记得发地址给我哦~</div>
+                    <div class="message-time">昨天 18:35</div>
+                </div>
+            </div>
+            
+            <div class="message sent">
+                <div>
+                    <div class="message-content">没问题！今晚就发</div>
+                    <div class="message-time">昨天 18:36</div>
+                </div>
+                <img src="https://randomuser.me/api/portraits/men/44.jpg" alt="Avatar" class="message-avatar">
+            </div>
+        </div>
+        
+        <!-- 输入区域 -->
+        <div class="input-container">
+            <div class="input-box">
+                <i class="fas fa-smile"></i>
+                <input type="text" id="messageInput" placeholder="输入消息..." value="圣诞快乐">
+                <i class="fas fa-plus-circle"></i>
+            </div>
+            <button class="send-button" id="sendButton">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+    
+    <!-- 特效容器 -->
+    <div id="christmas-container"></div>
+    
+    <!-- 特效激活提示 -->
+    <div class="effect-notice" id="effectNotice">圣诞快乐！🎄</div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+            const christmasContainer = document.getElementById('christmasContainer');
+            const effectNotice = document.getElementById('effectNotice');
+            
+            // 发送消息函数
+            function sendMessage() {
+                const messageText = messageInput.value.trim();
+                if (!messageText) return;
+                
+                // 添加消息到聊天窗口
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message sent';
+                
+                const time = new Date();
+                const timeString = `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`;
+                
+                messageDiv.innerHTML = `
+                    <div>
+                        <div class="message-content">${messageText}</div>
+                        <div class="message-time">${timeString}</div>
+                    </div>
+                    <img src="https://randomuser.me/api/portraits/men/44.jpg" alt="Avatar" class="message-avatar">
+                `;
+                
+                chatContainer.appendChild(messageDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                
+                // 检查是否触发特效
+                if (messageText.includes('圣诞快乐')) {
+                    activateChristmasEffect();
+                }
+                
+                // 清空输入框
+                messageInput.value = '';
+                
+                // 模拟其他用户回复
+                setTimeout(() => {
+                    const replies = [
+                        "圣诞快乐！🎅",
+                        "大家圣诞快乐！",
+                        "圣诞快乐！祝大家节日愉快！",
+                        "圣诞快乐！记得来参加派对哦~"
+                    ];
+                    
+                    const randomReply = replies[Math.floor(Math.random() * replies.length)];
+                    const replyDiv = document.createElement('div');
+                    replyDiv.className = 'message received';
+                    
+                    const replyTime = new Date();
+                    const replyTimeString = `${replyTime.getHours().toString().padStart(2, '0')}:${replyTime.getMinutes().toString().padStart(2, '0')}`;
+                    
+                    // 随机选择一个头像
+                    const randomAvatar = `https://randomuser.me/api/portraits/${Math.random() > 0.5 ? 'men' : 'women'}/${Math.floor(Math.random() * 70)}.jpg`;
+                    
+                    replyDiv.innerHTML = `
+                        <img src="${randomAvatar}" alt="Avatar" class="message-avatar">
+                        <div>
+                            <div class="message-content">${randomReply}</div>
+                            <div class="message-time">${replyTimeString}</div>
+                        </div>
+                    `;
+                    
+                    chatContainer.appendChild(replyDiv);
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                    
+                    // 如果回复也包含圣诞快乐，再次触发特效（概率较低）
+                    if (randomReply.includes('圣诞快乐') && Math.random() > 0.7) {
+                        setTimeout(activateChristmasEffect, 500);
+                    }
+                }, 1000 + Math.random() * 2000);
+            }
+            
+            // 激活圣诞特效
+            function activateChristmasEffect() {
+                // 显示特效提示
+                effectNotice.style.display = 'block';
+                setTimeout(() => {
+                    effectNotice.style.display = 'none';
+                }, 3000);
+                
+                // 创建多个圣诞树和雪花
+                const treeCount = 10;
+                const snowflakeCount = 50;
+                
+                // 创建圣诞树
+                for (let i = 0; i < treeCount; i++) {
+                    createChristmasTree();
+                }
+                
+                // 创建雪花
+                for (let i = 0; i < snowflakeCount; i++) {
+                    createSnowflake();
+                }
+                
+                // 创建装饰星星
+                for (let i = 0; i < 15; i++) {
+                    createStar();
+                }
+                
+                // 创建装饰球
+                for (let i = 0; i < 20; i++) {
+                    createOrnament();
+                }
+            }
+            
+            // 创建圣诞树
+            function createChristmasTree() {
+                const tree = document.createElement('div');
+                tree.className = 'christmas-tree';
+                
+                // 随机位置
+                const left = Math.random() * 100;
+                tree.style.left = `${left}%`;
+                
+                // 随机大小
+                const scale = 0.5 + Math.random() * 0.7;
+                tree.style.transform = `scale(${scale})`;
+                
+                // 随机动画时长
+                const duration = 8 + Math.random() * 10;
+                tree.style.animationDuration = `${duration}s`;
+                
+                // 随机延迟
+                const delay = Math.random() * 5;
+                tree.style.animationDelay = `${delay}s`;
+                
+                // 创建树的各个部分
+                tree.innerHTML = `
+                    <div class="tree-top"></div>
+                    <div class="tree-middle"></div>
+                    <div class="tree-bottom"></div>
+                    <div class="tree-trunk"></div>
+                `;
+                
+                // 添加装饰球到树上
+                const colors = ['#ff4444', '#44ff44', '#4444ff', '#ffff44', '#ff44ff'];
+                for (let i = 0; i < 5; i++) {
+                    const ornament = document.createElement('div');
+                    ornament.className = 'ornament';
+                    ornament.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    ornament.style.top = `${30 + Math.random() * 130}px`;
+                    ornament.style.left = `${-40 + Math.random() * 80}px`;
+                    tree.appendChild(ornament);
+                }
+                
+                christmasContainer.appendChild(tree);
+                
+                // 动画结束后移除元素
+                setTimeout(() => {
+                    tree.remove();
+                }, (duration + delay) * 1000);
+            }
+            
+            // 创建雪花
+            function createSnowflake() {
+                const snowflake = document.createElement('div');
+                snowflake.className = 'snowflake';
+                snowflake.innerHTML = '❄';
+                
+                // 随机位置
+                const left = Math.random() * 100;
+                snowflake.style.left = `${left}%`;
+                
+                // 随机大小
+                const size = 15 + Math.random() * 25;
+                snowflake.style.fontSize = `${size}px`;
+                
+                // 随机动画时长
+                const duration = 10 + Math.random() * 15;
+                snowflake.style.animationDuration = `${duration}s`;
+                
+                // 随机延迟
+                const delay = Math.random() * 5;
+                snowflake.style.animationDelay = `${delay}s`;
+                
+                // 随机透明度
+                snowflake.style.opacity = 0.5 + Math.random() * 0.5;
+                
+                christmasContainer.appendChild(snowflake);
+                
+                // 动画结束后移除元素
+                setTimeout(() => {
+                    snowflake.remove();
+                }, (duration + delay) * 1000);
+            }
+            
+            // 创建星星
+            function createStar() {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.innerHTML = '★';
+                
+                // 随机位置
+                const left = Math.random() * 100;
+                const top = Math.random() * 100;
+                star.style.left = `${left}%`;
+                star.style.top = `${top}%`;
+                
+                // 随机大小
+                const size = 10 + Math.random() * 20;
+                star.style.fontSize = `${size}px`;
+                
+                // 随机动画延迟
+                const delay = Math.random() * 2;
+                star.style.animationDelay = `${delay}s`;
+                
+                christmasContainer.appendChild(star);
+                
+                // 一段时间后移除
+                setTimeout(() => {
+                    star.remove();
+                }, 5000);
+            }
+            
+            // 创建装饰球
+            function createOrnament() {
+                const ornament = document.createElement('div');
+                ornament.className = 'ornament';
+                
+                // 随机位置
+                const left = Math.random() * 100;
+                ornament.style.left = `${left}%`;
+                
+                // 随机大小
+                const size = 8 + Math.random() * 12;
+                ornament.style.width = `${size}px`;
+                ornament.style.height = `${size}px`;
+                
+                // 随机颜色
+                const colors = ['#ff4444', '#44ff44', '#4444ff', '#ffff44', '#ff44ff', '#ff8844'];
+                ornament.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                // 随机动画
+                const duration = 6 + Math.random() * 10;
+                ornament.style.animation = `fall ${duration}s linear forwards`;
+                
+                // 随机延迟
+                const delay = Math.random() * 3;
+                ornament.style.animationDelay = `${delay}s`;
+                
+                christmasContainer.appendChild(ornament);
+                
+                // 动画结束后移除元素
+                setTimeout(() => {
+                    ornament.remove();
+                }, (duration + delay) * 1000);
+            }
+            
+            // 事件监听
+            sendButton.addEventListener('click', sendMessage);
+            
+            messageInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+            
+            // 页面加载后自动触发一次特效作为演示
+            setTimeout(() => {
+                messageInput.value = "圣诞快乐";
+                sendMessage();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
